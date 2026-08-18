@@ -5,7 +5,8 @@ node_modules/
 __pycache__/
 *.pyc
 .pytest_cache/
-alembic/versions/*.pyc
+*.pyo
 *.egg-info/
 dist/
-.vite/
+.venv/
+venv/
