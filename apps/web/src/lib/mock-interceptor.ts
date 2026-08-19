@@ -451,13 +451,13 @@ export function setupMockInterceptor(axiosInstance: any) {
   axiosInstance.interceptors.request.use(async (config: any) => {
     if (typeof window === "undefined") return config
 
-    const url = config.url || ""
-    if (!url.startsWith("/api/v1")) return config
+    const urlPath = config.url || ""
+    const fullUrl = urlPath.startsWith("/api/v1") ? urlPath : `/api/v1${urlPath}`
 
     const method = (config.method || "GET").toUpperCase()
-    const body = config.data ? JSON.parse(config.data) : undefined
+    const body = typeof config.data === "string" ? JSON.parse(config.data) : config.data
 
-    const route = matchRoute(method, url)
+    const route = matchRoute(method, fullUrl)
     if (route) {
       try {
         const data = await route.handler.handler(route.params, body, route.match)
@@ -471,14 +471,12 @@ export function setupMockInterceptor(axiosInstance: any) {
           })
         }
       } catch (error: any) {
-        config.adapter = () => {
-          return Promise.reject({
-            response: {
-              data: error.response?.data || { detail: "Mock error" },
-              status: error.response?.status || 500,
-            },
-          })
+        const err = error instanceof Error ? error : new Error(error?.response?.data?.detail || "Mock error")
+        ;(err as any).response = error.response || {
+          data: { detail: "Mock error" },
+          status: error.status || 500,
         }
+        config.adapter = () => Promise.reject(err)
       }
     }
 
