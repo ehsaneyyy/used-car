@@ -5,15 +5,12 @@ from sqlmodel import SQLModel
 from app.core.config import settings
 
 
-def _prepare_database_url(url: str) -> str:
+def _prepare_database_url(url: str) -> tuple[str, dict]:
     parsed = urlparse(url)
     params = parse_qs(parsed.query)
-    ssl_mode = params.pop("sslmode", [None])[0]
-    clean_url = urlunparse(parsed._replace(query=urlencode(params, doseq=True)))
-    connect_args = {}
-    if ssl_mode:
-        connect_args["ssl"] = ssl_mode != "disable"
-    return clean_url, connect_args
+    needs_ssl = params.get("sslmode", [None])[0] not in (None, "disable")
+    clean_url = urlunparse(parsed._replace(query=""))
+    return clean_url, {"ssl": needs_ssl} if needs_ssl else {}
 
 
 _db_url, _ssl_args = _prepare_database_url(settings.DATABASE_URL)
