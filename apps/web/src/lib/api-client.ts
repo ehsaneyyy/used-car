@@ -11,7 +11,7 @@ export const apiClient = axios.create({
   },
 })
 
-if (typeof window !== "undefined") {
+if (typeof window !== "undefined" && !process.env.NEXT_PUBLIC_API_URL) {
   setupMockInterceptor(apiClient)
 }
 
